@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineMatch AI — Find movies you'll love</title>
+<link rel="stylesheet" href="styles.css">
+<script src="chart.min.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">🎬</span>
+    <div>
+      <div class="brand-name">CineMatch <span>AI</span></div>
+      <div class="brand-sub">Find movies you'll love</div>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="discover" class="active">Discover</button>
+    <button data-tab="foryou">For You</button>
+    <button data-tab="ratings">My Ratings <span class="pill" id="ratingsPill">0</span></button>
+    <button data-tab="watchlist">Watchlist <span class="pill" id="watchPill">0</span></button>
+    <button data-tab="analytics">Analytics</button>
+  </nav>
+  <div class="session-chip" id="sessionChip" title="Your guest session">🎟️ Guest</div>
+</header>
+
+<main>
+  <!-- DISCOVER -->
+  <section id="tab-discover" class="tab-page active">
+    <div class="hero">
+      <h1>What should you watch tonight?</h1>
+      <p>9,742 movies, rated by 610 real MovieLens users. Tell CineMatch what you like and it finds your next favourite.</p>
+      <div class="search-row">
+        <input id="searchInput" type="text" placeholder="Search a movie, e.g. Matrix…" autocomplete="off">
+        <button id="searchBtn" class="btn btn-red">Search</button>
+        <button id="onboardBtn" class="btn btn-ghost">✨ Get my matches</button>
+      </div>
+      <div class="mood-row" id="moodRow"></div>
+    </div>
+
+    <h2 class="row-title">🔥 Trending now</h2>
+    <div class="rail" id="trendingRail"></div>
+
+    <h2 class="row-title">⭐ Top rated of all time</h2>
+    <div class="rail" id="topRail"></div>
+
+    <h2 class="row-title">🎞️ Browse all movies</h2>
+    <div class="filters">
+      <select id="genreFilter"><option value="">All genres</option></select>
+      <input id="yearMin" type="number" placeholder="Year from" min="1900" max="2025">
+      <input id="yearMax" type="number" placeholder="Year to" min="1900" max="2025">
+      <select id="minRatingFilter">
+        <option value="0">Any rating</option>
+        <option value="3.5">★ 3.5 &amp; up</option>
+        <option value="4">★ 4.0 &amp; up</option>
+        <option value="4.2">★ 4.2 &amp; up</option>
+      </select>
+      <select id="sortFilter">
+        <option value="trending">Sort: Trending</option>
+        <option value="rating">Sort: Highest rated</option>
+        <option value="popular">Sort: Most rated</option>
+        <option value="newest">Sort: Newest</option>
+        <option value="oldest">Sort: Oldest</option>
+        <option value="title">Sort: A–Z</option>
+      </select>
+      <button id="applyFilters" class="btn btn-red">Apply</button>
+      <button id="clearFilters" class="btn btn-ghost">Clear</button>
+    </div>
+    <div class="grid" id="browseGrid"></div>
+    <div class="pager">
+      <button id="prevPage" class="btn btn-ghost">← Prev</button>
+      <span id="pageInfo"></span>
+      <button id="nextPage" class="btn btn-ghost">Next →</button>
+    </div>
+  </section>
+
+  <!-- FOR YOU -->
+  <section id="tab-foryou" class="tab-page">
+    <div class="hero slim">
+      <h1>🎯 For You</h1>
+      <p id="foryouSub">Your personalised picks, built from the movies you rate.</p>
+    </div>
+    <div id="foryouEmpty" class="empty-box hidden">
+      <h2>We don't know your taste yet</h2>
+      <p>Rate 5 movies, pick a mood, or try a demo persona — and CineMatch will build your matches in seconds.</p>
+      <div class="empty-actions">
+        <button class="btn btn-red" id="emptyOnboard">⭐ Rate 5 movies</button>
+        <button class="btn btn-ghost" id="emptyMoods">🎭 Pick a mood</button>
+      </div>
+      <div class="persona-row" id="foryouPersonas"></div>
+      <div class="mood-row" id="foryouMoods"></div>
+      <div class="grid" id="coldGrid"></div>
+    </div>
+    <div id="foryouContent" class="hidden">
+      <div class="taste-bar" id="tasteBar"></div>
+      <div class="grid" id="recGrid"></div>
+      <div class="how-box">
+        <h3>How your matches are made</h3>
+        <p><b>Hybrid recommender:</b> 45% content-based (TF-IDF over genres, tags, director &amp; cast — movies like the ones you loved), 45% collaborative (item-item similarity from 100,836 real MovieLens ratings — people who liked your favourites also liked these), 10% popularity (Bayesian average rating). Match % is the blended score, scaled 55–98. Full numbers on the Analytics tab.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MY RATINGS -->
+  <section id="tab-ratings" class="tab-page">
+    <div class="hero slim"><h1>⭐ My Ratings</h1><p>Every movie you have rated, with your stars.</p></div>
+    <div class="grid" id="ratingsGrid"></div>
+    <div id="ratingsEmpty" class="empty-box hidden"><h2>No ratings yet</h2><p>Open any movie and give it stars — your For You page updates instantly.</p></div>
+  </section>
+
+  <!-- WATCHLIST -->
+  <section id="tab-watchlist" class="tab-page">
+    <div class="hero slim"><h1>🔖 Watchlist</h1><p>Movies you saved to watch later.</p></div>
+    <div class="grid" id="watchGrid"></div>
+    <div id="watchEmpty" class="empty-box hidden"><h2>Watchlist is empty</h2><p>Tap 🔖 on any movie to save it here.</p></div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section id="tab-analytics" class="tab-page">
+    <div class="hero slim"><h1>📊 Analytics &amp; Model</h1><p>What's in the data, and how well each recommendation model actually works.</p></div>
+    <div class="stat-cards" id="statCards"></div>
+    <div class="charts">
+      <div class="chart-card"><h3>Movies per genre</h3><canvas id="genreChart"></canvas></div>
+      <div class="chart-card"><h3>How users rate (100,836 ratings)</h3><canvas id="ratingChart"></canvas></div>
+    </div>
+    <div class="chart-card wide">
+      <h3>Model evaluation — hold-out test</h3>
+      <p class="muted" id="evalMethod"></p>
+      <table class="metrics" id="metricsTable"></table>
+      <p class="muted">Reading the numbers: <b>Precision@10</b> = share of the top 10 picks that were actually liked (held-out rating ≥ 4). <b>Recall@10</b> = share of all liked held-out movies found in the top 10. <b>RMSE</b> = average rating-prediction error in stars (lower is better). The hybrid wins on recall — it finds more of what you like — while pure collaborative filtering is the most accurate at predicting exact star ratings.</p>
+    </div>
+    <div class="chart-card wide">
+      <h3>🏆 Top 10 movies by Bayesian average</h3>
+      <ol class="toplist" id="topList"></ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Built on the <b>MovieLens ml-latest-small</b> dataset (9,742 movies · 100,836 ratings · 610 users). Director, cast &amp; synopsis are curated for the 130 most-rated titles; other titles show genres and community ratings. Demo personas are synthetic. A Data Science project.</p>
+</footer>
+
+<!-- MOVIE DETAIL MODAL -->
+<div class="modal hidden" id="movieModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-poster" id="modalPoster"></div>
+    <div class="modal-body">
+      <h2 id="modalTitle"></h2>
+      <div class="modal-meta" id="modalMeta"></div>
+      <p id="modalSynopsis" class="synopsis"></p>
+      <div class="modal-facts" id="modalFacts"></div>
+      <div class="rate-box">
+        <span>Your rating:</span>
+        <div class="stars big" id="modalStars"></div>
+        <button class="btn btn-ghost" id="modalUnrate">Remove rating</button>
+        <button class="btn btn-red" id="modalWatch">🔖 Add to watchlist</button>
+      </div>
+      <h3>More like this</h3>
+      <div class="rail small" id="modalSimilar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING MODAL -->
+<div class="modal hidden" id="onboardModal">
+  <div class="modal-card narrow">
+    <button class="modal-close" id="onboardClose">✕</button>
+    <h2>✨ Get your matches</h2>
+    <p>Rate <b>5 movies</b> and CineMatch builds your personalised For You page. Skip any you haven't seen.</p>
+    <div class="onboard-progress"><span id="onboardCount">0 / 5 rated</span><div class="progress"><div id="onboardBar"></div></div></div>
+    <div id="onboardList"></div>
+    <h3>…or try a demo persona</h3>
+    <div class="persona-row" id="onboardPersonas"></div>
+    <button class="btn btn-red big" id="onboardDone" disabled>See my matches →</button>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
